@@ -18,6 +18,7 @@
 | children |  | required | Scene root element |
 | `wrapBy`   | `Function` |  | allows integration of state management schemes like Redux (`connect`) and Mobx (`observer`) |
 | `sceneStyle`     | `Style` |  | Style applied to all scenes (optional) |
+| `backAndroidHandler`     | `Function` |  | Allows custom control of hardwareBackPress in Android (optional). For more info check [BackHandler](https://facebook.github.io/react-native/docs/backhandler.html).  |
 
 ## Scene:
 The basic routing component for this router, all `<Scene>` components require a `key` prop that must be unique. A parent `<Scene>` cannot not have a `component` as a `prop` as it will act as a grouping component for its children.
@@ -26,26 +27,25 @@ The basic routing component for this router, all `<Scene>` components require a 
 |-----------|----------|----------|--------------------------------------------|
 | `key`       | `string` | `required` | Will be used to call screen transition, for example, `Actions.name(params)`. Must be unique. |
 | `component` | `React.Component` | `semi-required` | The `Component` to be displayed. Not required when defining a nested `Scene`, see example. |
-| `animationEnabled`     | `boolean` | `true` | Enable or disable animating tabs on switch. |
 | `back`     | `boolean` | `false` | If it is `true` back button is displayed instead of left/drawer button defined by upper container. |
+| `backButtonImage`     | `string` | Image source to substitute for the nav back button |
 | `init`     | `boolean` | `false` | If it is `true` back button will not be displayed |
 | `clone`     | `boolean` | `false` | Scenes marked with `clone` will be treated as templates and cloned into the current scene's parent when pushed. See example. |
 | `contentComponent`     | `React.Component` |  | Component used to render the content of the drawer (e.g. navigation items). |
 | `drawer`     | `boolean` | `false` | load child scenes inside [DrawerNavigator](https://reactnavigation.org/docs/navigators/drawer) |
 | `failure` | `Function` | | If `on` returns a "falsey" value then `failure` is called. |
-| `headerBackTitle` | `string` |  | Specifies the back button title for scene |
+| `backTitle` | `string` |  | Specifies the back button title for scene |
 | `headerMode` | `string` | `float` | Specifies how the header should be rendered: `float` (render a single header that stays at the top and animates as screens are changed. This is a common pattern on iOS.), `screen` (each screen has a header attached to it and the header fades in and out together with the screen. This is a common pattern on Android) or `none` (No header will be rendered) |
 | `hideNavBar`     | `boolean` | `false` | hide the nav bar |
 | `hideTabBar`     | `boolean` | `false` | hide the tab bar (only applies to scenes with `tabs` specified) |
 | `initial`   | `boolean` | `false` | Set to `true` if this is the first scene to display among its sibling `Scene`s |
-| `lazy`     | `boolean` | `false` | whether to lazily render tabs as needed as opposed to rendering them upfront |
 | `leftButtonImage`     | `Image` |  | Image to substitute for the left nav bar button |
 | `leftButtonTextStyle`     | `Style` |  | Style applied to left button text |
 | `modal`     | `boolean` | `false` |  Defines scene container as 'modal' one, i.e. all children scenes will have bottom-to-top animation. It is applicable only for containers (different from v3 syntax) |
 | `navBar` | `React.Component`| | Optional React component to render custom NavBar |
 | `navBarButtonColor` | `string` | | Set the color of the back button in the navBar |
 | `navigationBarStyle`     | `Style` | | Style applied to nav bar |
-| `navigationBarTitleImage` | `Image` | | Override the image in the center of the navbar, replacing the `title` |
+| `navigationBarTitleImage` | `Object` | | The `Image` source that overrides the `title` in the navbar the image in the center of the navbar |
 | `navigationBarTitleImageStyle` | `object` | | Styles to apply to `navigationBarTitleImage` |
 | `navTransparent`     | `boolean` | `false` | nav bar background transparency |
 | `on`     | `Function` | | aka `onEnter` |
@@ -54,6 +54,8 @@ The basic routing component for this router, all `<Scene>` components require a 
 | `onLeft`     | `Function` |  | Called when the left nav bar button is pressed. |
 | `onRight`     | `Function` |  | Called when the right nav bar button is pressed. |
 | `renderTitle`     | `React.Component` |  | React component to render title for nav bar |
+| `renderLeftButton` | `React.Component` | | React component to render as the left button |
+| `renderRightButton` | `React.Component` | | React component to render as the right button |
 | `rightButtonImage`     | `Image` |  | Image to substitute for the right nav bar button |
 | `rightButtonTextStyle`     | `Style` |  | Style applied to right button text |
 | `success`     | `Function` | | If `on` returns a "truthy" value then `success` is called. |
@@ -68,11 +70,13 @@ Can use all `props` listed above in `<Scene>` as `<Tabs>` is syntatic sugar for 
 
 | Property | Type | Default | Description |
 |-----------------|----------|----------|--------------------------------------------|
+| `wrap`     | `boolean` | `true` | Wrap each scene with own navbar automatically (if it is not another container). |
 | `activeBackgroundColor` | `string` |  | Specifies the active background color for the tab in focus |
 | `activeTintColor`     | `string` |  | Specifies the active tint color for tabbar icons |
 | `inactiveBackgroundColor` | `string` |  | Specifies the inactive background color for the tabs not in focus |
 | `inactiveTintColor`     | `string` |  | Specifies the inactive tint color for tabbar icons |
 | `labelStyle` | `object` | | Overrides the styles for the tab label |
+| `lazy`     | `boolean` | `false` | Won't render/mount the tab scene until the tab is active |
 | `tabBarComponent`     | `React.Component` |  | React component to render custom tab bar |
 | `tabBarPosition`     | `string` |  | Specifies tabbar position. Defaults to `bottom` on iOS and `top` on Android. |
 | `tabBarStyle` | `object` | | Override the tabbar styles |
@@ -80,6 +84,8 @@ Can use all `props` listed above in `<Scene>` as `<Tabs>` is syntatic sugar for 
 | `showLabel`     | `boolean` | `true`  | Boolean to show or not the tabbar icons labels |
 | `swipeEnabled`     | `boolean` | `true` | Enable or disable swiping tabs. |
 
+## Stack (`<Stack>`)
+A component to group Scenes together for its own stack based navigation. Using this will create a separate havigator for this stack, so expect two navbars to appear unless you add `hideNavBar`.
 
 ## Tab Scene (child `<Scene>` within `Tabs`)
 A `Scene` that is a direct child of `Tabs` and can use all `props` listed above in `Scene`,
@@ -96,6 +102,7 @@ Can use all `prop` as listed in `Scene` as `<Drawer>`, syntatic sugar for `<Scen
 |---|---|---|---|
 | `drawerImage` | `Image` |  | Image to substitute drawer 'hamburger' icon, you have to set it together with `drawer` prop |
 | `drawerIcon` | `React.Component` |  | Arbitrary component to be used for drawer 'hamburger' icon, you have to set it together with `drawer` prop |
+| `hideDrawerButton` | `boolean` | `false` | Boolean to show or not the drawerImage or drawerIcon |
 | `drawerPosition` | `string`  | Determines whether the drawer is on the right or the left. Keywords accepted are `right` and `left` |
 
 
@@ -150,10 +157,10 @@ These can be used directly, for example, `Actions.pop()` will dispatch correspon
 | Property | Type | Parameters | Description |
 |-----------------|----------|----------|--------------------------------------------|
 | `[key]` | `Function` | `Object` | The `Actions` object "automagically" uses the `Scene`'s `key` prop in the `Router` to navigate. To navigate to a scene, call `Actions.key()` or `Actions[key].call()`. |
-| `jump` | `Function` | `(sceneKey: String, props: Object)` | |
+| `currentScene` | `String` | | Returns the current scene that is active |
+| `jump` | `Function` | `(sceneKey: String, props: Object)` | used to switch to a new tab. For `Tabs` only. |
 | `pop` | `Function` | | Go back to the previous scene by "popping" the current scene off the nav stack |
-| `popAndPush` | `Function` | `(sceneKey: String, props: Object)` |
-| `popTo` | `Function` | `(sceneKey: String, props: Object)` | Pops the stack until the
+| `popTo` | `Function` | `(sceneKey: String, props: Object)` | Pops the navigation stack until the `Scene` with the specified key is reached. |
 | `push` | `Function` | `(sceneKey: String, props: Object)` | Pushes the scene to the stack, performing a transition to the new scene. |
 | `refresh` | `Function` | `(props: Object)` | Reloads the current scene by loading new `props` into the `Scene` |
 | `replace` | `Function` | `(sceneKey: String, props: Object)` |  Pops the current scene from the stack and pushes the new scene to the navigation stack. *No transition will occur. |

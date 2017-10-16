@@ -114,7 +114,7 @@ function createNavigationOptions(params) {
     navigationBarStyle, headerStyle, navBarButtonColor, tabBarLabel, tabBarIcon, icon, getTitle, renderTitle, panHandlers,
     navigationBarTitleImage, navigationBarTitleImageStyle, component, rightTitle, leftTitle, leftButtonTextStyle, rightButtonTextStyle,
     backButtonTextStyle, headerTitleStyle, titleStyle, navBar, onRight, onLeft, rightButtonImage, leftButtonImage, init, back,
-    renderBackButton, renderNavigationBar, drawerIcon, drawerImage, drawerPosition, ...props } = params;
+    renderBackButton, renderNavigationBar, hideDrawerButton, drawerIcon, drawerImage, drawerPosition, ...props } = params;
   const NavBar = renderNavigationBar || navBar;
   if (component && component.navigationOptions) {
     return component.navigationOptions;
@@ -134,11 +134,21 @@ function createNavigationOptions(params) {
       headerStyle: getValue((navigationParams.headerStyle || headerStyle || navigationBarStyle), state),
       headerBackImage: navigationParams.backButtonImage || backButtonImage,
     };
-    if (NavBar) {
+
+    const NavBarFromParams = navigationParams.renderNavigationBar || navigationParams.navBar;
+    if (NavBarFromParams != null) {
+      if (NavBarFromParams) {
+        res.header = (data) => <NavBarFromParams navigation={navigation} {...state} {...data} />;
+      }
+    } else if (NavBar) {
       res.header = (data) => <NavBar navigation={navigation} {...state} {...data} />;
     }
 
-    if (panHandlers === null) {
+    if (typeof navigationParams.panHandlers !== 'undefined') {
+      if (navigationParams.panHandlers === null) {
+        res.gesturesEnabled = false;
+      }
+    } else if (panHandlers === null) {
       res.gesturesEnabled = false;
     }
 
@@ -168,22 +178,29 @@ function createNavigationOptions(params) {
 
     if (rightButtonImage || rightTitle || params.renderRightButton || onRight || navigationParams.onRight
       || navigationParams.rightTitle || navigationParams.rightButtonImage || rightButtonTextStyle
-      || ((drawerImage || drawerIcon) && drawerPosition === 'right')) {
+      || ((drawerImage || drawerIcon) && !hideDrawerButton && drawerPosition === 'right')) {
       res.headerRight = getValue(navigationParams.right || navigationParams.rightButton || params.renderRightButton,
         { ...navigationParams, ...screenProps }) || <RightNavBarButton {...params} {...navigationParams} {...componentData} />;
     }
 
     if (leftButtonImage || backButtonImage || backTitle || leftTitle || params.renderLeftButton || leftButtonTextStyle
       || backButtonTextStyle || onLeft || navigationParams.leftTitle || navigationParams.onLeft || navigationParams.leftButtonImage
-      || navigationParams.backButtonImage || navigationParams.backTitle || ((drawerImage || drawerIcon) && drawerPosition !== 'right')) {
+      || navigationParams.backButtonImage || navigationParams.backTitle || ((drawerImage || drawerIcon) && !hideDrawerButton && drawerPosition !== 'right')) {
       res.headerLeft = getValue(navigationParams.left || navigationParams.leftButton || params.renderLeftButton, { ...params, ...navigationParams, ...screenProps })
         || (((onLeft && (leftTitle || navigationParams.leftTitle || leftButtonImage || navigationParams.leftButtonImage)) || drawerImage || drawerIcon)
-          && <LeftNavBarButton {...params} {...navigationParams} {...componentData} />)
+          && <LeftNavBarButton {...params} {...navigationParams} {...componentData} />) || res.headerLeft
         || (init ? null : (renderBackButton && renderBackButton(state)) || <BackNavBarButton {...state} />);
     }
 
     if (back) {
       res.headerLeft = (renderBackButton && renderBackButton(state)) || <BackNavBarButton {...state} />;
+    }
+
+    if (typeof navigationParams.left !== 'undefined' || typeof navigationParams.leftButton !== 'undefined' ||
+      typeof navigationParams.renderLeftButton !== 'undefined') {
+      if (navigationParams.left === null || navigationParams.leftButton === null || navigationParams.renderLeftButton === null) {
+        res.headerLeft = null;
+      }
     }
 
     // currect dynamic navigation params has priority over static scene params
@@ -195,12 +212,14 @@ function createNavigationOptions(params) {
     } else if (hideTabBar) {
       res.tabBarVisible = false;
     }
+
     if (hideNavBar) {
       res.header = null;
     }
 
     if (navTransparent) {
-      res.headerStyle = { position: 'absolute', backgroundColor: 'transparent', zIndex: 100, top: 0, left: 0, right: 0 };
+      res.headerStyle = { position: 'absolute', backgroundColor: 'transparent', zIndex: 100, top: 0, left: 0, right: 0,
+        borderBottomWidth: 0, elevation: 1 };
     }
     return res;
   };
