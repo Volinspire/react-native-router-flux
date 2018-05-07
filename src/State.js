@@ -6,7 +6,7 @@ export function getActiveStateExceptDrawer(param) {
   if (state.routes[state.index].routeName === 'DrawerOpen') {
     return getActiveState(state.routes[0]);
   }
-  return getActiveState(state.routes[state.index]);
+  return getActiveState(state.routes[state.index], { ...state, parent });
 }
 
 export function isActiveRoute(state, routeName) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Launch from './components/Launch';
 import Register from './components/Register';
 import Login from './components/Login';
@@ -59,17 +59,21 @@ const getSceneStyle = () => ({
   shadowRadius: 3,
 });
 
+// on Android, the URI prefix typically contains a host in addition to scheme
+const prefix = Platform.OS === 'android' ? 'mychat://mychat/' : 'mychat://';
+
 const Example = () => (
   <Router
     createReducer={reducerCreate}
     getSceneStyle={getSceneStyle}
-  >
-    <Overlay>
-      <Modal
+    uriPrefix={prefix}>
+
+    <Overlay key="overlay">
+      <Modal key="modal"
         hideNavBar
         transitionConfig={() => ({ screenInterpolator: CardStackStyleInterpolator.forFadeFromBottomAndroid })}
       >
-        <Lightbox>
+        <Lightbox key="lightbox">
           <Stack
             hideNavBar
             key="root"
@@ -114,6 +118,7 @@ const Example = () => (
               backTitle="Back"
               key="register"
               duration={0}
+              navTransparent
             >
               <Scene key="_register" component={Register} title="Register" />
               <Scene key="register2" component={Register} title="Register2" />
@@ -125,12 +130,13 @@ const Example = () => (
               key="drawer"
               contentComponent={DrawerContent}
               drawerImage={MenuIcon}
+              drawerWidth={300}
             >
               {/*
                 Wrapper Scene needed to fix a bug where the tabs would
                 reload as a modal ontop of itself
               */}
-              <Scene hideNavBar>
+              <Scene hideNavBar panHandlers={null}>
                 <Tabs
                   key="tabbar"
                   swipeEnabled
@@ -150,7 +156,7 @@ const Example = () => (
                     titleStyle={{ color: 'white', alignSelf: 'center' }}
                   >
                     <Scene
-                      key="tab1_1"
+                      key="tab_1_1"
                       component={TabView}
                       title="Tab #1_1"
                       onRight={() => alert('Right button')}
@@ -200,9 +206,7 @@ const Example = () => (
                       onRight={() => { }}
                     />
                   </Stack>
-                  <Stack key="tab_4">
-                    <Scene key="tab_4_1" component={TabView} title="Tab #4" hideNavBar icon={TabIcon} />
-                  </Stack>
+                  <Scene key="tab_4_1" component={TabView} title="Tab #4" hideNavBar icon={TabIcon} />
                   <Stack key="tab_5">
                     <Scene key="tab_5_1" component={TabView} title="Tab #5" icon={TabIcon} />
                   </Stack>
@@ -214,7 +218,7 @@ const Example = () => (
           <Scene key="demo_lightbox" component={DemoLightbox} />
         </Lightbox>
         <Scene key="error" component={ErrorModal} />
-        <Stack key="login" titleStyle={{ alignSelf: 'center' }}>
+        <Stack key="login" path="login/:data" titleStyle={{ alignSelf: 'center' }}>
           <Scene
             key="loginModal"
             component={Login}

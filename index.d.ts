@@ -11,11 +11,13 @@ export type Router = RouterStatic;
 export var Reducer: any;
 export type Reducer = any;
 
-// Router 
+// Router
 interface RouterProps extends React.Props<Router> {
     sceneStyle?: StyleProp<ViewStyle>;
     backAndroidHandler?: Function;
     createReducer?: Function;
+    wrapBy?: Function;
+    scenes?: any;
 }
 interface RouterStatic extends React.ComponentClass<RouterProps> { }
 
@@ -29,12 +31,15 @@ interface SceneProps extends React.Props<Scene> {
     init?: boolean;
     clone?: boolean;
     contentComponent?: React.ComponentType<any>
+    backButtonImage?: string;
+    backButtonTintColor?: string;
     drawer?: boolean;
     failure?: () => void;
     headerBackTitle?: string;
     headerMode?: HeaderModeType;
     hideNavBar?: boolean;
     hideTabBar?: boolean;
+    hideBackImage?: boolean;
     initial?: boolean;
     leftButtonImage?: Image;
     modal?: boolean;
@@ -49,6 +54,7 @@ interface SceneProps extends React.Props<Scene> {
     renderTitle?: React.ComponentType<any>
     renderLeftButton?: React.ComponentType<any>
     renderRightButton?: React.ComponentType<any>
+    renderBackButton?: React.ComponentType<any>
     rightButtonImage?: Image;
     rightButtonTextStyle?: StyleProp<TextStyle>;
     success?: () => void;
@@ -82,8 +88,10 @@ interface TabsProps extends React.Props<Tabs> {
     tabStyle?: StyleProp<ViewStyle>;
     showLabel?: boolean;
     swipeEnabled?: boolean;
+    tabBarOnPress?: Function;
+    backToInitial?: boolean;
 }
-interface TabsStatic extends React.ComponentClass<SceneProps & TabsProps> { }
+interface TabsStatic extends React.ComponentClass<TabsProps> { }
 export type TabBarPositionType = "top" | "bottom";
 
 // Drawer
@@ -109,7 +117,7 @@ export type Overlay = OverlayStatic;
 interface OverlayProps extends React.Props<Overlay> { }
 interface OverlayStatic extends React.ComponentClass<SceneProps & OverlayProps> { }
 
-// Lightbox 
+// Lightbox
 export var Lightbox : LightboxStatic;
 export type Lightbox  = LightboxStatic;
 interface LightboxProps extends React.Props<Modal> { }
@@ -118,15 +126,20 @@ interface LightboxStatic extends React.ComponentClass<LightboxProps> { }
 // Stack
 export var Stack: StackStatic;
 export type Stack = StackStatic;
-interface StackProps extends React.Props<Stack> { 
-    navigationBarStyle?: StyleProp<ViewStyle>;
-}
-interface StackStatic extends React.ComponentClass<StackProps> { }
 
-export var Actions: ActionsStatic & ActionsGenericStatic;
-export type Actions = ActionsStatic & ActionsGenericStatic;
+interface StackProps extends React.Props<Stack> {
+    navigationBarStyle?: StyleProp<ViewStyle>;
+    icon?: any;
+    tintColor?: string;
+    hideNavBar?: boolean;
+}
+interface StackStatic extends React.ComponentClass<StackProps> {
+}
+
+export var Actions: ActionsGenericStatic;
+export type Actions = ActionsGenericStatic;
 interface ActionsStatic {
-    currentScene: string;
+    currentScene: any;
     jump: (sceneKey: string, props?: any) => void;
     pop: () => void;
     popAndPush: (sceneKey: string, props?: any) => void;
@@ -135,11 +148,11 @@ interface ActionsStatic {
     refresh: (props?: any) => void;
     replace: (sceneKey: string, props?: any) => void;
     reset: (sceneKey: string, props?: any) => void;
-    drawerOpen?: () => void;
-    drawerClose?: () => void;
+    drawerOpen?: any;
+    drawerClose?: any;
 
 }
-interface ActionsGenericStatic {
+interface ActionsGenericStatic extends ActionsStatic {
     [key: string]: (props?: any) => void;
 }
 

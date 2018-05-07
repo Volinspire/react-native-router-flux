@@ -16,9 +16,10 @@
 | Property | Type | Default | Description |
 |-------------|----------|--------------|----------------------------------------------------------------|
 | children |  | required | Scene root element |
-| `wrapBy`   | `Function` |  | allows integration of state management schemes like Redux (`connect`) and Mobx (`observer`) |
+| `wrapBy`   | `Function` |  | function to wrap each Scene component and nav bar buttons - allows easy MobX integration (by passing `observer`) |
 | `sceneStyle`     | `Style` |  | Style applied to all scenes (optional) |
 | `backAndroidHandler`     | `Function` |  | Allows custom control of hardwareBackPress in Android (optional). For more info check [BackHandler](https://facebook.github.io/react-native/docs/backhandler.html).  |
+| `uriPrefix`     | `string` |  | A uri prefix to strip from incoming urls for deep linking. For example, if you wanted to support deep linking from `www.example.com/user/1234/`, then you could pass `example.com` to only match paths against `/user/1234/`. |
 
 ## Scene:
 The basic routing component for this router, all `<Scene>` components require a `key` prop that must be unique. A parent `<Scene>` cannot not have a `component` as a `prop` as it will act as a grouping component for its children.
@@ -26,21 +27,28 @@ The basic routing component for this router, all `<Scene>` components require a 
 | Property | Type | Default | Description |
 |-----------|----------|----------|--------------------------------------------|
 | `key`       | `string` | `required` | Will be used to call screen transition, for example, `Actions.name(params)`. Must be unique. |
+| `path`       | `string` |  | Will be used to match against incoming deep links and pull params. For example, the path `/user/:id/` would specify to call the Scene's action with params `{ id: 1234 }` from the url `/user/1234/`. Should adhere to widely accepted uri templating standard https://tools.ietf.org/html/rfc6570 |
 | `component` | `React.Component` | `semi-required` | The `Component` to be displayed. Not required when defining a nested `Scene`, see example. |
 | `back`     | `boolean` | `false` | If it is `true` back button is displayed instead of left/drawer button defined by upper container. |
-| `backButtonImage`     | `string` | Image source to substitute for the nav back button |
+| `backButtonImage`     | `string` | | Image source to substitute for the nav back button |
+| `backButtonTintColor`     | `string` | | Custom back button tint color |
 | `init`     | `boolean` | `false` | If it is `true` back button will not be displayed |
 | `clone`     | `boolean` | `false` | Scenes marked with `clone` will be treated as templates and cloned into the current scene's parent when pushed. See example. |
 | `contentComponent`     | `React.Component` |  | Component used to render the content of the drawer (e.g. navigation items). |
 | `drawer`     | `boolean` | `false` | load child scenes inside [DrawerNavigator](https://reactnavigation.org/docs/navigators/drawer) |
 | `failure` | `Function` | | If `on` returns a "falsey" value then `failure` is called. |
 | `backTitle` | `string` |  | Specifies the back button title for scene |
+| `backButtonTextStyle` | `Style` |  | Style applied to back button text |
+| `rightTitle` | `string` |  | Specifies the right button title for scene |
 | `headerMode` | `string` | `float` | Specifies how the header should be rendered: `float` (render a single header that stays at the top and animates as screens are changed. This is a common pattern on iOS.), `screen` (each screen has a header attached to it and the header fades in and out together with the screen. This is a common pattern on Android) or `none` (No header will be rendered) |
 | `hideNavBar`     | `boolean` | `false` | hide the nav bar |
 | `hideTabBar`     | `boolean` | `false` | hide the tab bar (only applies to scenes with `tabs` specified) |
+| `hideBackImage`     | `boolean` | `false` | hide back image |
 | `initial`   | `boolean` | `false` | Set to `true` if this is the first scene to display among its sibling `Scene`s |
 | `leftButtonImage`     | `Image` |  | Image to substitute for the left nav bar button |
 | `leftButtonTextStyle`     | `Style` |  | Style applied to left button text |
+| `leftButtonStyle`     | `Style` |  | Style applied to left button |
+| `leftButtonIconStyle`     | `Style` |  | Style applied to left button Image |
 | `modal`     | `boolean` | `false` |  Defines scene container as 'modal' one, i.e. all children scenes will have bottom-to-top animation. It is applicable only for containers (different from v3 syntax) |
 | `navBar` | `React.Component`| | Optional React component to render custom NavBar |
 | `navBarButtonColor` | `string` | | Set the color of the back button in the navBar |
@@ -49,13 +57,15 @@ The basic routing component for this router, all `<Scene>` components require a 
 | `navigationBarTitleImageStyle` | `object` | | Styles to apply to `navigationBarTitleImage` |
 | `navTransparent`     | `boolean` | `false` | nav bar background transparency |
 | `on`     | `Function` | | aka `onEnter` |
-| `onEnter`     | `Function` | | Called when the `Scene` is navigated to. `props` are provided as a function param. Only scenes with 'component' defined is supported |
-| `onExit`     | `Function` | | Called when the `Scene` is navigated away from. Only scenes with 'component' defined is supported |
+| `onBack`     | `Function` |  | Called when the back button is pressed. |
+| `onEnter`     | `Function` | | Called when the `Scene` is navigated to. `props` are provided as a function param. Only scenes with 'component' defined is supported. Your component class may also have `onEnter` function |
+| `onExit`     | `Function` | | Called when the `Scene` is navigated away from. Only scenes with 'component' defined is supported. Your component class may also have `onExit` function |
 | `onLeft`     | `Function` |  | Called when the left nav bar button is pressed. |
 | `onRight`     | `Function` |  | Called when the right nav bar button is pressed. |
 | `renderTitle`     | `React.Component` |  | React component to render title for nav bar |
 | `renderLeftButton` | `React.Component` | | React component to render as the left button |
 | `renderRightButton` | `React.Component` | | React component to render as the right button |
+| `renderBackButton` | `React.Component` | | React component to render back button |
 | `rightButtonImage`     | `Image` |  | Image to substitute for the right nav bar button |
 | `rightButtonTextStyle`     | `Style` |  | Style applied to right button text |
 | `success`     | `Function` | | If `on` returns a "truthy" value then `success` is called. |
@@ -82,10 +92,13 @@ Can use all `props` listed above in `<Scene>` as `<Tabs>` is syntatic sugar for 
 | `tabBarStyle` | `object` | | Override the tabbar styles |
 | `tabStyle` | `object` | | Override the style for an individual tab of the tabbar |
 | `showLabel`     | `boolean` | `true`  | Boolean to show or not the tabbar icons labels |
-| `swipeEnabled`     | `boolean` | `true` | Enable or disable swiping tabs. |
+| `swipeEnabled`     | `boolean` | `false` | Enable or disable swiping tabs. |
+| `animationEnabled`     | `boolean` | `true` | Enable or disable tab swipe animation. |
+| `tabBarOnPress`     | `function` | | Custom tab bar icon press. |
+| `backToInitial`     | `boolean` | `false` | Back to initial screen on focused tab if tab icon was tapped. |
 
 ## Stack (`<Stack>`)
-A component to group Scenes together for its own stack based navigation. Using this will create a separate havigator for this stack, so expect two navbars to appear unless you add `hideNavBar`.
+A component to group Scenes together for its own stack based navigation. Using this will create a separate navigator for this stack, so expect two navbars to appear unless you add `hideNavBar`.
 
 ## Tab Scene (child `<Scene>` within `Tabs`)
 A `Scene` that is a direct child of `Tabs` and can use all `props` listed above in `Scene`,
@@ -103,7 +116,9 @@ Can use all `prop` as listed in `Scene` as `<Drawer>`, syntatic sugar for `<Scen
 | `drawerImage` | `Image` |  | Image to substitute drawer 'hamburger' icon, you have to set it together with `drawer` prop |
 | `drawerIcon` | `React.Component` |  | Arbitrary component to be used for drawer 'hamburger' icon, you have to set it together with `drawer` prop |
 | `hideDrawerButton` | `boolean` | `false` | Boolean to show or not the drawerImage or drawerIcon |
-| `drawerPosition` | `string`  | Determines whether the drawer is on the right or the left. Keywords accepted are `right` and `left` |
+| `drawerPosition` | `string`  | `left` | Determines whether the drawer is on the right or the left. Keywords accepted are `right` and `left` |
+| `drawerWidth` | `number`  |  | The width, in pixels, of the drawer (optional)|
+| `drawerLockMode` | enum('unlocked', 'locked-closed', 'locked-open')  |  | Specifies the lock mode of the drawer (https://facebook.github.io/react-native/docs/drawerlayoutandroid.html#drawerlockmode) |
 
 
 ## Modals (`<Modal>` or `<Scene modal>`)
@@ -185,3 +200,23 @@ Type constants to determine `Scene` transitions, These are **PREFERRED** over ty
 | `ActionConst.FOCUS` | `string` | 'REACT_NATIVE_ROUTER_FLUX_FOCUS' | *N/A* |
 | `ActionConst.BLUR` | `string` | 'REACT_NATIVE_ROUTER_FLUX_BLUR' | *N/A* |
 | `ActionConst.ANDROID_BACK` | `string` | 'REACT_NATIVE_ROUTER_FLUX_ANDROID_BACK' | *N/A* |
+
+## Universal and Deep Linking
+#### Use Case
+- Consider a web app and mobile app pairing for a social network, which might have a url `https://thesocialnetwork.com/profile/1234/`.
+- If we were building both a web app and a mobile app, we'd like to be able to express that uri scheme across platforms with the path `/profile/:id/`.
+- On the web, we might want `React-Router` to to open up our `<Profile />` component with the `props` `{ id: 1234 }`.
+- On mobile, if we've correctly set up our Android/iOS environment to launch our application and open our RNRF `<Router />`, then we also want to navigate to our mobile `<Profile />` scene with the `params` ` { id: 1234 }`
+
+#### Usage
+```javascript
+<Router uriPrefix={'thesocialnetwork.com'}>
+  <Scene key="root">
+     <Scene key={'home'} component={Home} />
+     <Scene key={'profile'} path={"/profile/:id/"} component={Profile} />
+     <Scene key={'profileForm'} path={"/edit/profile/:id/"} component={ProfileForm} />
+  </Scene>
+</Router>
+```
+
+If a user clicks on `http://thesocialnetwork.com/profile/1234/` on their device, they'll open the `<Router />` and then call `Actions.profile({ id: 1234 })`
